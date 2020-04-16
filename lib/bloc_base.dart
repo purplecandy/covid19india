@@ -37,10 +37,10 @@ abstract class BlocBase<S, A, T> {
 typedef Widget SnapshopBuilder<A, K>(BuildContext context, Event<A, K> event);
 typedef Widget ErrorBuilder(BuildContext context, Exception error);
 
-class BlocBuilder<A, K, T extends BlocBase> extends StatelessWidget {
+class BlocBuilder<A, K> extends StatelessWidget {
   final SnapshopBuilder<A, K> onSuccess;
   final ErrorBuilder onError;
-  final T bloc;
+  final dynamic bloc;
   const BlocBuilder({Key key, this.onSuccess, this.onError, this.bloc})
       : super(key: key);
 

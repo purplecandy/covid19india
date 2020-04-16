@@ -10,24 +10,45 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _controller = ScrollController();
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 2, // This is the number of tabs.
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("COVID 19 India"),
-          actions: <Widget>[SwitchTheme()],
-          bottom: TabBar(tabs: [
-            Tab(
-              text: "STATE",
-            ),
-            Tab(
-              text: "COUNTRY",
-            ),
-          ]),
+        body: NestedScrollView(
+          controller: _controller,
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverOverlapAbsorber(
+                handle:
+                    NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                child: SliverAppBar(
+                  title: const Text(
+                      'COVID-19 India'), // This is the title in the app bar.
+                  pinned: false,
+                  expandedHeight: 80.0,
+                  forceElevated: innerBoxIsScrolled,
+                  bottom: TabBar(
+                    // These are the widgets to put in each tab in the tab bar.
+                    tabs: [
+                      Tab(
+                        text: "Maharastra",
+                      ),
+                      Tab(
+                        text: "Country",
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            // These are the contents of the tab views, below the tabs.
+            children: [RegionalPage(), Container()],
+          ),
         ),
-        body: TabBarView(children: [RegionalPage(), Container()]),
       ),
     );
   }

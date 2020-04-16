@@ -1,9 +1,14 @@
 import 'package:covid19india/bloc_base.dart';
-import 'package:covid19india/blocs/state_bloc.dart';
+import 'package:covid19india/blocs/regional_bloc.dart';
+import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'dart:math';
+import 'package:charts_flutter/src/text_element.dart';
+import 'package:charts_flutter/src/text_style.dart' as style;
 
 class RegionalPage extends StatefulWidget {
   RegionalPage({Key key}) : super(key: key);
@@ -14,6 +19,7 @@ class RegionalPage extends StatefulWidget {
 
 class _RegionalPageState extends State<RegionalPage> {
   final bloc = RegionalStatsBloc();
+  final blocData = RegionalStatsData();
 
   @override
   void initState() {
@@ -30,23 +36,172 @@ class _RegionalPageState extends State<RegionalPage> {
   void startup(Repository repo) {
     bloc.dispatch(RegionalAction.fetch,
         {"state_name": "Maharashtra", "json_data": repo.casesCountLatest});
+    blocData.dispatch(RegionalAction.fetch,
+        {"state_name": "Maharashtra", "json_data": repo.casesCountHistory});
   }
 
   @override
   Widget build(BuildContext context) {
     return Provider<RegionalStatsBloc>(
       create: (_) => bloc,
-      child: Container(
-        // height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        child:
-            BlocBuilder<RegionalState, RegionalStatsModel, RegionalStatsBloc>(
-          bloc: bloc,
-          onSuccess: (context, event) {
-            switch (event.state) {
-              case RegionalState.done:
-                // return Center(child: Text(event.object.loc));
-                return Column(
+      child: Provider<RegionalStatsData>(
+          create: (_) => blocData,
+          child: SafeArea(
+              child: Builder(
+                  builder: (context) => CustomScrollView(
+                        key: PageStorageKey("sad"),
+                        slivers: <Widget>[
+                          SliverOverlapInjector(
+                            // This is the flip side of the SliverOverlapAbsorber above.
+                            handle:
+                                NestedScrollView.sliverOverlapAbsorberHandleFor(
+                                    context),
+                          ),
+                          SliverList(
+                              delegate: SliverChildListDelegate(
+                            [
+                              MetaData(),
+                              HeaderTile(
+                                title: "Yesterday",
+                                days: 1,
+                              ),
+                              HeaderTile(
+                                title: "Last 7 days",
+                                days: 7,
+                              ),
+                              HeaderTile(
+                                title: "Last 14 days",
+                                days: 14,
+                              ),
+                              Charts()
+                            ],
+                          ))
+                        ],
+                      )))),
+    );
+  }
+}
+
+class HeaderTile extends StatelessWidget {
+  final String title;
+  final int days;
+  const HeaderTile({Key key, this.title, this.days}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RegionalStatsData>(
+      builder: (c, bloc, w) =>
+          BlocBuilder<RegionalState, List<Entity<RegionalStatsModel>>>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case RegionalState.done:
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          title,
+                          style: TextStyle(
+                              fontSize: 21, fontWeight: FontWeight.w700),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: <Widget>[
+                            ColorBadge(
+                              backgroundColor: Colors.red.shade100,
+                              textColor: Colors.red,
+                              content: bloc
+                                  .getTotalCasesByDays(days)["confirmed"]
+                                  .toString(),
+                            ),
+                            ColorBadge(
+                              backgroundColor: Colors.blue.shade100,
+                              textColor: Colors.blue,
+                              content: bloc
+                                  .getTotalCasesByDays(days)["active"]
+                                  .toString(),
+                            ),
+                            ColorBadge(
+                              backgroundColor: Colors.green.shade100,
+                              textColor: Colors.green,
+                              content: bloc
+                                  .getTotalCasesByDays(days)["recovered"]
+                                  .toString(),
+                            ),
+                            ColorBadge(
+                              backgroundColor: Colors.grey.shade100,
+                              textColor: Colors.grey,
+                              content: bloc
+                                  .getTotalCasesByDays(days)["deaths"]
+                                  .toString(),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              );
+              break;
+            default:
+              return Container();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class ColorBadge extends StatelessWidget {
+  final String content;
+  final Color backgroundColor;
+  final Color textColor;
+  const ColorBadge(
+      {Key key, this.content, this.backgroundColor, this.textColor})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+          color: backgroundColor, borderRadius: BorderRadius.circular(4)),
+      child: Text(
+        content,
+        style: TextStyle(
+            color: textColor, fontSize: 19, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class MetaData extends StatelessWidget {
+  const MetaData({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RegionalStatsBloc>(
+      builder: (c, bloc, w) => BlocBuilder<RegionalState, RegionalStatsModel>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case RegionalState.done:
+              double padding = 8.0;
+              double cwidth = MediaQuery.of(context).size.width - padding * 2;
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Padding(
@@ -60,7 +215,7 @@ class _RegionalPageState extends State<RegionalPage> {
                     Wrap(
                       children: <Widget>[
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.5,
+                          width: cwidth * 0.5,
                           child: ColorTile(
                             title: "Confirmed",
                             content: event.object.totalConfirmed.toString(),
@@ -69,7 +224,7 @@ class _RegionalPageState extends State<RegionalPage> {
                           ),
                         ),
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.5,
+                          width: cwidth * 0.5,
                           child: ColorTile(
                             title: "Active",
                             content: (event.object.totalConfirmed -
@@ -85,7 +240,7 @@ class _RegionalPageState extends State<RegionalPage> {
                     Row(
                       children: <Widget>[
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.5,
+                          width: cwidth * 0.5,
                           child: ColorTile(
                             title: "Recovered",
                             content: event.object.discharged.toString(),
@@ -94,7 +249,7 @@ class _RegionalPageState extends State<RegionalPage> {
                           ),
                         ),
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.5,
+                          width: cwidth * 0.5,
                           child: ColorTile(
                             title: "Deceased",
                             content: event.object.deaths.toString(),
@@ -103,20 +258,72 @@ class _RegionalPageState extends State<RegionalPage> {
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
-                );
-                break;
-              default:
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-            }
-          },
-          onError: (context, error) => Center(
-            child: Text(error.toString()),
-          ),
+                ),
+              );
+              break;
+            default:
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+          }
+        },
+        onError: (context, error) => Center(
+          child: Text(error.toString()),
         ),
+      ),
+    );
+  }
+}
+
+class Charts extends StatefulWidget {
+  const Charts({Key key}) : super(key: key);
+
+  @override
+  _ChartsState createState() => _ChartsState();
+}
+
+class _ChartsState extends State<Charts> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RegionalStatsData>(
+      builder: (c, bloc, w) =>
+          BlocBuilder<RegionalState, List<Entity<RegionalStatsModel>>>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case RegionalState.done:
+              return Container(
+                height: 400,
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: charts.TimeSeriesChart(
+                      [
+                        charts.Series<Entity<RegionalStatsModel>, DateTime>(
+                            labelAccessorFn: (_, i) =>
+                                event.object[i].data.totalConfirmed.toString(),
+                            id: "Day wise ",
+                            domainFn: (_, i) => event.object[i].date,
+                            measureFn: (d, i) => i == 0
+                                ? d.data.totalConfirmed
+                                : (d.data.totalConfirmed -
+                                        event.object[i - 1].data.totalConfirmed)
+                                    .abs(),
+                            data: event.object)
+                      ],
+                      defaultRenderer: new charts.BarRendererConfig<DateTime>(),
+                    ),
+                  ),
+                ),
+              );
+              break;
+            default:
+              return Container();
+          }
+        },
       ),
     );
   }
