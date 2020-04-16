@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
                   pinned: false,
                   expandedHeight: 80.0,
                   forceElevated: innerBoxIsScrolled,
+                  actions: <Widget>[SwitchTheme()],
                   bottom: TabBar(
                     // These are the widgets to put in each tab in the tab bar.
                     tabs: [

@@ -3,12 +3,12 @@ import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
+import 'package:covid19india/widgets/chart_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:covid19india/widgets/color_tile.dart';
 import 'dart:math';
-import 'package:charts_flutter/src/text_element.dart';
-import 'package:charts_flutter/src/text_style.dart' as style;
 
 class RegionalPage extends StatefulWidget {
   RegionalPage({Key key}) : super(key: key);
@@ -35,9 +35,9 @@ class _RegionalPageState extends State<RegionalPage> {
 
   void startup(Repository repo) {
     bloc.dispatch(RegionalAction.fetch,
-        {"state_name": "Maharashtra", "json_data": repo.casesCountLatest});
+        {"state_name": "Maharastra", "json_data": repo.casesCountLatest});
     blocData.dispatch(RegionalAction.fetch,
-        {"state_name": "Maharashtra", "json_data": repo.casesCountHistory});
+        {"state_name": "Maharastra", "json_data": repo.casesCountHistory});
   }
 
   @override
@@ -66,14 +66,43 @@ class _RegionalPageState extends State<RegionalPage> {
                                 days: 1,
                               ),
                               HeaderTile(
-                                title: "Last 7 days",
+                                title: "Last week",
                                 days: 7,
                               ),
                               HeaderTile(
-                                title: "Last 14 days",
+                                title: "Last 2 weeks",
                                 days: 14,
                               ),
-                              Charts()
+                              ConfirmedChartDaily(
+                                backgroundColor: Colors.red.shade100,
+                                barColor:
+                                    charts.MaterialPalette.red.shadeDefault,
+                                title: "Confirmed",
+                                toolTipColor: Colors.red,
+                                type: "confirmed",
+                              ),
+                              SizedBox(
+                                height: 40,
+                              ),
+                              ConfirmedChartDaily(
+                                backgroundColor: Colors.green.shade100,
+                                barColor:
+                                    charts.MaterialPalette.green.shadeDefault,
+                                title: "Recovered",
+                                toolTipColor: Colors.green,
+                                type: "recovered",
+                              ),
+                              SizedBox(
+                                height: 40,
+                              ),
+                              ConfirmedChartDaily(
+                                backgroundColor: Colors.grey.shade100,
+                                barColor:
+                                    charts.MaterialPalette.gray.shadeDefault,
+                                title: "Deaths",
+                                toolTipColor: Colors.grey,
+                                type: "deaths",
+                              )
                             ],
                           ))
                         ],
@@ -87,6 +116,38 @@ class HeaderTile extends StatelessWidget {
   final int days;
   const HeaderTile({Key key, this.title, this.days}) : super(key: key);
 
+  Map<String, int> getFlex(List<int> values) {
+    Map<String, int> flexes = {};
+    int maxV = values.reduce(max);
+    int minV = values.reduce(min);
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] == maxV) {
+        flexes[_keyName(i)] = 3;
+      } else if (values[i] == minV) {
+        flexes[_keyName(i)] = 1;
+      } else {
+        flexes[_keyName(i)] = 2;
+      }
+    }
+
+    return flexes;
+  }
+
+  String _keyName(int i) {
+    switch (i) {
+      case 0:
+        return "confirmed";
+        break;
+      case 1:
+        return "recovered";
+        break;
+      case 2:
+        return "deaths";
+        break;
+      default:
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<RegionalStatsData>(
@@ -96,6 +157,11 @@ class HeaderTile extends StatelessWidget {
         onSuccess: (context, event) {
           switch (event.state) {
             case RegionalState.done:
+              List<int> values = [];
+              values.add(bloc.getTotalCasesByDays(days)["confirmed"]);
+              values.add(bloc.getTotalCasesByDays(days)["recovered"]);
+              values.add(bloc.getTotalCasesByDays(days)["deaths"]);
+              final flex = getFlex(values);
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Card(
@@ -117,33 +183,38 @@ class HeaderTile extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
-                            ColorBadge(
-                              backgroundColor: Colors.red.shade100,
-                              textColor: Colors.red,
-                              content: bloc
-                                  .getTotalCasesByDays(days)["confirmed"]
-                                  .toString(),
+                            Expanded(
+                              flex: flex["confirmed"],
+                              child: ColorBadge(
+                                backgroundColor: Colors.red.shade100,
+                                textColor: Colors.red,
+                                content: values[0].toString(),
+                              ),
                             ),
-                            ColorBadge(
-                              backgroundColor: Colors.blue.shade100,
-                              textColor: Colors.blue,
-                              content: bloc
-                                  .getTotalCasesByDays(days)["active"]
-                                  .toString(),
+                            // Expanded(
+                            //   child: ColorBadge(
+                            //     backgroundColor: Colors.blue.shade100,
+                            //     textColor: Colors.blue,
+                            //     content: bloc
+                            //         .getTotalCasesByDays(days)["active"]
+                            //         .toString(),
+                            //   ),
+                            // ),
+                            Expanded(
+                              flex: flex["recovered"],
+                              child: ColorBadge(
+                                backgroundColor: Colors.green.shade100,
+                                textColor: Colors.green,
+                                content: values[1].toString(),
+                              ),
                             ),
-                            ColorBadge(
-                              backgroundColor: Colors.green.shade100,
-                              textColor: Colors.green,
-                              content: bloc
-                                  .getTotalCasesByDays(days)["recovered"]
-                                  .toString(),
-                            ),
-                            ColorBadge(
-                              backgroundColor: Colors.grey.shade100,
-                              textColor: Colors.grey,
-                              content: bloc
-                                  .getTotalCasesByDays(days)["deaths"]
-                                  .toString(),
+                            Expanded(
+                              flex: flex["deaths"],
+                              child: ColorBadge(
+                                backgroundColor: Colors.grey.shade100,
+                                textColor: Colors.grey,
+                                content: values[2].toString(),
+                              ),
                             )
                           ],
                         )
@@ -199,15 +270,16 @@ class MetaData extends StatelessWidget {
               double padding = 8.0;
               double cwidth = MediaQuery.of(context).size.width - padding * 2;
               return Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding:
+                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.only(bottom: 8.0, left: 8.0),
                       child: Text(
-                        event.object.loc,
+                        "Overall",
                         style: TextStyle(
                             fontSize: 21, fontWeight: FontWeight.w600),
                       ),
@@ -277,14 +349,19 @@ class MetaData extends StatelessWidget {
   }
 }
 
-class Charts extends StatefulWidget {
-  const Charts({Key key}) : super(key: key);
+class ConfirmedChartDaily extends StatelessWidget {
+  final String type, title;
+  final Color backgroundColor, toolTipColor;
+  final charts.Color barColor;
+  const ConfirmedChartDaily(
+      {Key key,
+      this.type,
+      this.title,
+      this.barColor,
+      this.backgroundColor,
+      this.toolTipColor})
+      : super(key: key);
 
-  @override
-  _ChartsState createState() => _ChartsState();
-}
-
-class _ChartsState extends State<Charts> {
   @override
   Widget build(BuildContext context) {
     return Consumer<RegionalStatsData>(
@@ -297,26 +374,37 @@ class _ChartsState extends State<Charts> {
               return Container(
                 height: 400,
                 padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: charts.TimeSeriesChart(
-                      [
-                        charts.Series<Entity<RegionalStatsModel>, DateTime>(
-                            labelAccessorFn: (_, i) =>
-                                event.object[i].data.totalConfirmed.toString(),
-                            id: "Day wise ",
-                            domainFn: (_, i) => event.object[i].date,
-                            measureFn: (d, i) => i == 0
-                                ? d.data.totalConfirmed
-                                : (d.data.totalConfirmed -
-                                        event.object[i - 1].data.totalConfirmed)
-                                    .abs(),
-                            data: event.object)
-                      ],
-                      defaultRenderer: new charts.BarRendererConfig<DateTime>(),
-                    ),
-                  ),
+                child: ChartWidget<Entity<RegionalStatsModel>>(
+                  backgroundColor: backgroundColor,
+                  barColor: barColor,
+                  tooltipColor: toolTipColor,
+                  chartId: title,
+                  xAxisData: (_, i) => event.object[i].date,
+                  yAxisData: (d, i) {
+                    int yPos;
+                    int diff;
+                    var entity = i == 0 ? event.object[i] : event.object[i - 1];
+
+                    switch (type) {
+                      case "confirmed":
+                        yPos = d.data.totalConfirmed;
+                        diff = entity.data.totalConfirmed;
+                        break;
+                      case "recovered":
+                        yPos = d.data.discharged;
+                        diff = entity.data.discharged;
+                        break;
+                      case "deaths":
+                        yPos = d.data.deaths;
+                        diff = entity.data.deaths;
+                        break;
+                      default:
+                        throw ("Invalid type");
+                    }
+                    return i == 0 ? yPos : (yPos - diff).abs();
+                  },
+                  isCummulative: false,
+                  seriesData: event.object,
                 ),
               );
               break;
@@ -324,49 +412,6 @@ class _ChartsState extends State<Charts> {
               return Container();
           }
         },
-      ),
-    );
-  }
-}
-
-class ColorTile extends StatelessWidget {
-  final String title, content;
-  final Color background;
-  final Color textColor;
-  const ColorTile(
-      {Key key, this.title, this.content, this.background, this.textColor})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 75,
-      child: Card(
-        color: background,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                title,
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              Text(
-                content,
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
