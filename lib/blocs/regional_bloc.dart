@@ -118,7 +118,6 @@ class RegionalDistrictBloc
       if (data.state == Status.success) {
         List<DistrictModel> districts = [];
         for (var item in data.object) {
-          print(item);
           districts.add(DistrictModel.fromJson(item));
         }
         int limit = 5;

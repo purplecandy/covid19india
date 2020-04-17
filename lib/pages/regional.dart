@@ -1,19 +1,15 @@
-import 'package:covid19india/app.dart';
-import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
-import 'package:covid19india/models/district.dart';
-import 'package:covid19india/models/entity.dart';
-import 'package:covid19india/models/hospital.dart';
-import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
-import 'package:covid19india/widgets/chart_widget.dart';
+import 'package:covid19india/widgets/overall_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:covid19india/widgets/color_tile.dart';
 import 'package:covid19india/preferences.dart';
-import 'dart:math';
+import 'package:covid19india/widgets/header_tile.dart';
+import 'package:covid19india/widgets/district_data.dart';
+import 'package:covid19india/widgets/hospital_data.dart';
+import 'package:covid19india/widgets/charts/charts.dart';
 
 class RegionalPage extends StatefulWidget {
   RegionalPage({Key key}) : super(key: key);
@@ -27,7 +23,7 @@ class _RegionalPageState extends State<RegionalPage> {
   final blocData = RegionalStatsData();
   final blocDistrict = RegionalDistrictBloc();
   final blocHospital = RegionalHospitalsData();
-
+  final chartType = ChartType();
   int activeIndex = 0;
 
   @override
@@ -68,705 +64,130 @@ class _RegionalPageState extends State<RegionalPage> {
             create: (_) => blocDistrict,
             child: Provider<RegionalHospitalsData>(
               create: (_) => blocHospital,
-              child: SafeArea(
-                  top: false,
-                  minimum: EdgeInsets.only(top: 8),
-                  child: Builder(
-                      builder: (context) => CustomScrollView(
-                            key: PageStorageKey("sad"),
-                            slivers: <Widget>[
-                              SliverOverlapInjector(
-                                // This is the flip side of the SliverOverlapAbsorber above.
-                                handle: NestedScrollView
-                                    .sliverOverlapAbsorberHandleFor(context),
-                              ),
-                              SliverList(
-                                  delegate: SliverChildListDelegate(
-                                [
-                                  MetaData(),
-                                  HeaderTile(
-                                    title: "Yesterday",
-                                    days: 1,
-                                  ),
-                                  HeaderTile(
-                                    title: "Last week",
-                                    days: 7,
-                                  ),
-                                  HeaderTile(
-                                    title: "Last month",
-                                    days: 30,
-                                  ),
-                                  DistrictData(),
-                                  HospitalData(),
-                                  Container(
-                                    height: 150,
-                                    child: CupertinoSegmentedControl<int>(
-                                        children: {
-                                          0: Text("Cummulative"),
-                                          1: Text("Daily")
-                                        },
-                                        groupValue: activeIndex,
-                                        onValueChanged: (v) {
-                                          setState(() {
-                                            activeIndex = v;
-                                          });
-                                        }),
-                                  ),
-                                  ConfirmedChartDaily(
-                                    backgroundColor: Colors.red.shade100,
-                                    barColor:
-                                        charts.MaterialPalette.red.shadeDefault,
-                                    title: "Confirmed",
-                                    toolTipColor: Colors.red,
-                                    type: "confirmed",
-                                  ),
-                                  SizedBox(
-                                    height: 40,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Card(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              "Total Recovered",
-                                              style: TextStyle(
-                                                  fontSize: 21,
-                                                  fontWeight: FontWeight.w700),
-                                            ),
-                                          ),
-                                          ConfirmedChartDaily(
-                                            backgroundColor:
-                                                Colors.green.shade100,
-                                            barColor: charts.MaterialPalette
-                                                .green.shadeDefault,
-                                            title: "Recovered",
-                                            toolTipColor: Colors.green,
-                                            type: "recovered",
-                                          ),
-                                        ],
+              child: ChangeNotifierProvider<ChartType>(
+                create: (_) => chartType,
+                child: SafeArea(
+                    top: false,
+                    minimum: EdgeInsets.only(top: 8),
+                    child: Builder(
+                        builder: (context) => CustomScrollView(
+                              key: PageStorageKey("sad"),
+                              slivers: <Widget>[
+                                SliverOverlapInjector(
+                                  // This is the flip side of the SliverOverlapAbsorber above.
+                                  handle: NestedScrollView
+                                      .sliverOverlapAbsorberHandleFor(context),
+                                ),
+                                SliverList(
+                                    delegate: SliverChildListDelegate(
+                                  [
+                                    RegionalOverallData(),
+                                    HeaderTile(
+                                      title: "Yesterday",
+                                      days: 1,
+                                    ),
+                                    HeaderTile(
+                                      title: "Last week",
+                                      days: 7,
+                                    ),
+                                    HeaderTile(
+                                      title: "Last month",
+                                      days: 30,
+                                    ),
+                                    DistrictData(),
+                                    HospitalData(),
+                                    ChartSwitch(),
+                                    ChartContainer(
+                                      title: "Total Confirmed",
+                                      child: ChartSwitcher(
+                                        cummulative: ChartCummulative(
+                                          backgroundColor: Colors.red.shade100,
+                                          barColor: charts
+                                              .MaterialPalette.red.shadeDefault,
+                                          title: "Confirmed",
+                                          toolTipColor: Colors.red,
+                                          type: "confirmed",
+                                        ),
+                                        daily: ChartDaily(
+                                          backgroundColor: Colors.red.shade100,
+                                          barColor: charts
+                                              .MaterialPalette.red.shadeDefault,
+                                          title: "Confirmed",
+                                          toolTipColor: Colors.red,
+                                          type: "confirmed",
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    height: 40,
-                                  ),
-                                  ConfirmedChartDaily(
-                                    backgroundColor: Colors.grey.shade100,
-                                    barColor: charts
-                                        .MaterialPalette.gray.shadeDefault,
-                                    title: "Deaths",
-                                    toolTipColor: Colors.grey,
-                                    type: "deaths",
-                                  ),
-                                ],
-                              ))
-                            ],
-                          ))),
+                                    ChartContainer(
+                                      title: "Total Recovered",
+                                      child: ChartSwitcher(
+                                        cummulative: ChartCummulative(
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          barColor: charts.MaterialPalette.green
+                                              .shadeDefault,
+                                          title: "Recovered",
+                                          toolTipColor: Colors.green,
+                                          type: "recovered",
+                                        ),
+                                        daily: ChartDaily(
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          barColor: charts.MaterialPalette.green
+                                              .shadeDefault,
+                                          title: "Recovered",
+                                          toolTipColor: Colors.green,
+                                          type: "recovered",
+                                        ),
+                                      ),
+                                    ),
+                                    ChartContainer(
+                                      title: "Total Deceseased",
+                                      child: ChartSwitcher(
+                                        cummulative: ChartCummulative(
+                                          backgroundColor: Colors.grey.shade100,
+                                          barColor: charts.MaterialPalette.gray
+                                              .shadeDefault,
+                                          title: "Deaths",
+                                          toolTipColor: Colors.grey,
+                                          type: "deaths",
+                                        ),
+                                        daily: ChartDaily(
+                                          backgroundColor: Colors.grey.shade100,
+                                          barColor: charts.MaterialPalette.gray
+                                              .shadeDefault,
+                                          title: "Deaths",
+                                          toolTipColor: Colors.grey,
+                                          type: "deaths",
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ))
+                              ],
+                            ))),
+              ),
             ),
           )),
     );
   }
 }
 
-class HeaderTile extends StatelessWidget {
-  final String title;
-  final int days;
-  const HeaderTile({Key key, this.title, this.days}) : super(key: key);
-
-  Map<String, int> getFlex(List<int> values) {
-    Map<String, int> flexes = {};
-    int maxV = values.reduce(max);
-    int minV = values.reduce(min);
-    for (var i = 0; i < values.length; i++) {
-      if (values[i] == maxV) {
-        flexes[_keyName(i)] = 3;
-      } else if (values[i] == minV) {
-        flexes[_keyName(i)] = 1;
-      } else {
-        flexes[_keyName(i)] = 2;
-      }
-    }
-
-    return flexes;
-  }
-
-  String _keyName(int i) {
-    switch (i) {
-      case 0:
-        return "confirmed";
-        break;
-      case 1:
-        return "recovered";
-        break;
-      case 2:
-        return "deaths";
-        break;
-      default:
-    }
-  }
+class ChartSwitch extends StatelessWidget {
+  const ChartSwitch({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RegionalStatsData>(
-      builder: (c, bloc, w) =>
-          BlocBuilder<RegionalState, List<Entity<RegionalStatsModel>>>(
-        bloc: bloc,
-        onSuccess: (context, event) {
-          switch (event.state) {
-            case RegionalState.done:
-              List<int> values = [];
-              values.add(bloc.getTotalCasesByDays(days)["confirmed"]);
-              values.add(bloc.getTotalCasesByDays(days)["recovered"]);
-              values.add(bloc.getTotalCasesByDays(days)["deaths"]);
-              final flex = getFlex(values);
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          title,
-                          style: TextStyle(
-                              fontSize: 21, fontWeight: FontWeight.w700),
-                        ),
-                        SizedBox(
-                          height: 15,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: <Widget>[
-                            Expanded(
-                              flex: flex["confirmed"],
-                              child: ColorBadge(
-                                backgroundColor: Colors.red.shade100,
-                                textColor: Colors.red,
-                                content: values[0].toString(),
-                              ),
-                            ),
-                            // Expanded(
-                            //   child: ColorBadge(
-                            //     backgroundColor: Colors.blue.shade100,
-                            //     textColor: Colors.blue,
-                            //     content: bloc
-                            //         .getTotalCasesByDays(days)["active"]
-                            //         .toString(),
-                            //   ),
-                            // ),
-                            Expanded(
-                              flex: flex["recovered"],
-                              child: ColorBadge(
-                                backgroundColor: Colors.green.shade100,
-                                textColor: Colors.green,
-                                content: values[1].toString(),
-                              ),
-                            ),
-                            Expanded(
-                              flex: flex["deaths"],
-                              child: ColorBadge(
-                                backgroundColor: Colors.grey.shade100,
-                                textColor: Colors.grey,
-                                content: values[2].toString(),
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              );
-              break;
-            default:
-              return Container();
-          }
-        },
-      ),
-    );
-  }
-}
-
-class ColorBadge extends StatelessWidget {
-  final String content;
-  final Color backgroundColor;
-  final Color textColor;
-  const ColorBadge(
-      {Key key, this.content, this.backgroundColor, this.textColor})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-          color: backgroundColor, borderRadius: BorderRadius.circular(4)),
-      child: Text(
-        content,
-        style: TextStyle(
-            color: textColor, fontSize: 19, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-}
-
-class DistrictData extends StatelessWidget {
-  final List<Color> shades = [
-    Colors.pink.shade100,
-    Colors.pink.shade200,
-    Colors.pink.shade300,
-    Colors.pink.shade400,
-    Colors.pink.shade500
-  ];
-  DistrictData({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<RegionalDistrictBloc>(
-      builder: (c, bloc, w) => BlocBuilder<RegionalState, List<DistrictModel>>(
-        bloc: bloc,
-        onSuccess: (context, event) {
-          switch (event.state) {
-            case RegionalState.done:
-              return Padding(
-                padding:
-                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
-                child: Card(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, top: 8),
-                        child: Text(
-                          "Most affected districts",
-                          style: TextStyle(
-                              fontSize: 21, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 8.0, right: 8.0, bottom: 8.0),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: event.object.length,
-                          itemBuilder: (context, index) => Container(
-                            height: 40,
-                            margin: EdgeInsets.all(1),
-                            padding: EdgeInsets.only(left: 12, right: 12),
-                            decoration: BoxDecoration(
-                                // color: Colors.red.shade100,
-                                color: shades[(shades.length - 1) - index]
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(9)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  event.object[index].name,
-                                  style: TextStyle(
-                                      color: AppTheme.isDark(context)
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.w300),
-                                ),
-                                Text(
-                                  event.object[index].confirmedCases.toString(),
-                                  style: TextStyle(
-                                      // fontSize: 18,
-                                      // color: Color(0xFFff073a),
-                                      color: AppTheme.isDark(context)
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontWeight: FontWeight.w600),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-              break;
-            default:
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-          }
-        },
-        onError: (context, error) => Center(
-          child: Text(error.toString()),
-        ),
-      ),
-    );
-  }
-}
-
-class HospitalData extends StatelessWidget {
-  final List<Color> shades = [
-    Colors.pink.shade100,
-    Colors.pink.shade200,
-    Colors.pink.shade300,
-    Colors.pink.shade400,
-    Colors.pink.shade500
-  ];
-  HospitalData({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<RegionalHospitalsData>(
-      builder: (c, bloc, w) => BlocBuilder<RegionalState, HospitalModel>(
-        bloc: bloc,
-        onSuccess: (context, event) {
-          switch (event.state) {
-            case RegionalState.done:
-              return Padding(
-                padding:
-                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
-                child: Card(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0, top: 8),
-                        child: Text(
-                          "Hospitals & Beds",
-                          style: TextStyle(
-                              fontSize: 21, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: <Widget>[
-                            Container(
-                              height: 100,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                  color: Colors.deepPurple.shade200,
-                                  borderRadius: BorderRadius.circular(6)),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  Text(event.object.totalHospitals.toString(),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700)),
-                                  Text(
-                                    "Hospitals",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700),
-                                  )
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Column(
-                                children: <Widget>[
-                                  Container(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                        color: Colors.indigo.shade200,
-                                        borderRadius: BorderRadius.circular(6)),
-                                    child: Center(
-                                      child: Text(
-                                        "Rural ${event.object.ruralH}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Container(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                        color: Colors.indigo.shade200,
-                                        borderRadius: BorderRadius.circular(6)),
-                                    child: Center(
-                                      child: Text(
-                                        "Urban ${event.object.urbanH}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: Column(
-                                children: <Widget>[
-                                  Container(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                        color: Colors.deepOrange.shade200,
-                                        borderRadius: BorderRadius.circular(6)),
-                                    child: Center(
-                                      child: Text(
-                                        "Rural ${event.object.ruralB}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Container(
-                                    height: 45,
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                        color: Colors.deepOrange.shade200,
-                                        borderRadius: BorderRadius.circular(6)),
-                                    child: Center(
-                                      child: Text(
-                                        "Urban ${event.object.urbanB}",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Container(
-                              height: 100,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                  color: Colors.brown.shade200,
-                                  borderRadius: BorderRadius.circular(6)),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                                  Text(event.object.totalHospitals.toString(),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700)),
-                                  Text(
-                                    "Beds",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              );
-              break;
-            default:
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-          }
-        },
-        onError: (context, error) => Center(
-          child: Text(error.toString()),
-        ),
-      ),
-    );
-  }
-}
-
-class MetaData extends StatelessWidget {
-  const MetaData({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<RegionalStatsBloc>(
-      builder: (c, bloc, w) => BlocBuilder<RegionalState, RegionalStatsModel>(
-        bloc: bloc,
-        onSuccess: (context, event) {
-          switch (event.state) {
-            case RegionalState.done:
-              double padding = 8.0;
-              double cwidth = MediaQuery.of(context).size.width - padding * 2;
-              return Padding(
-                padding:
-                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, left: 8.0),
-                      child: Text(
-                        "Overall",
-                        style: TextStyle(
-                            fontSize: 21, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Wrap(
-                      children: <Widget>[
-                        SizedBox(
-                          width: cwidth * 0.5,
-                          child: ColorTile(
-                            title: "Confirmed",
-                            content: event.object.totalConfirmed.toString(),
-                            background: Colors.red.shade100,
-                            textColor: Color(0xFFff073a),
-                          ),
-                        ),
-                        SizedBox(
-                          width: cwidth * 0.5,
-                          child: ColorTile(
-                            title: "Active",
-                            content: (event.object.totalConfirmed -
-                                    (event.object.deaths +
-                                        event.object.discharged))
-                                .toString(),
-                            background: Colors.blue.shade100,
-                            textColor: Colors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: cwidth * 0.5,
-                          child: ColorTile(
-                            title: "Recovered",
-                            content: event.object.discharged.toString(),
-                            background: Colors.green.shade100,
-                            textColor: Colors.green,
-                          ),
-                        ),
-                        SizedBox(
-                          width: cwidth * 0.5,
-                          child: ColorTile(
-                            title: "Deceased",
-                            content: event.object.deaths.toString(),
-                            background: Colors.grey.shade100,
-                            textColor: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-              break;
-            default:
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-          }
-        },
-        onError: (context, error) => Center(
-          child: Text(error.toString()),
-        ),
-      ),
-    );
-  }
-}
-
-class ConfirmedChartDaily extends StatelessWidget {
-  final String type, title;
-  final Color backgroundColor, toolTipColor;
-  final charts.Color barColor;
-  const ConfirmedChartDaily(
-      {Key key,
-      this.type,
-      this.title,
-      this.barColor,
-      this.backgroundColor,
-      this.toolTipColor})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<RegionalStatsData>(
-      builder: (c, bloc, w) =>
-          BlocBuilder<RegionalState, List<Entity<RegionalStatsModel>>>(
-        bloc: bloc,
-        onSuccess: (context, event) {
-          switch (event.state) {
-            case RegionalState.done:
-              return Container(
-                height: 400,
-                padding: const EdgeInsets.all(8.0),
-                child: ChartWidget<Entity<RegionalStatsModel>>(
-                  backgroundColor: backgroundColor,
-                  barColor: barColor,
-                  tooltipColor: toolTipColor,
-                  chartId: title,
-                  xAxisData: (_, i) => event.object[i].date,
-                  yAxisData: (d, i) {
-                    int yPos;
-                    int diff;
-                    var entity = i == 0 ? event.object[i] : event.object[i - 1];
-
-                    switch (type) {
-                      case "confirmed":
-                        yPos = d.data.totalConfirmed;
-                        diff = entity.data.totalConfirmed;
-                        break;
-                      case "recovered":
-                        yPos = d.data.discharged;
-                        diff = entity.data.discharged;
-                        break;
-                      case "deaths":
-                        yPos = d.data.deaths;
-                        diff = entity.data.deaths;
-                        break;
-                      default:
-                        throw ("Invalid type");
-                    }
-                    return i == 0 ? yPos : (yPos - diff).abs();
-                  },
-                  isCummulative: false,
-                  seriesData: event.object,
-                ),
-              );
-              break;
-            default:
-              return Container();
-          }
-        },
+    return Consumer<ChartType>(
+      builder: (c, chartType, _) => SizedBox(
+        height: 50,
+        width: 50,
+        child: CupertinoSegmentedControl<int>(
+            children: {0: Text("Cummulative"), 1: Text("Daily")},
+            groupValue: chartType.type,
+            onValueChanged: (v) {
+              chartType.update(v);
+            }),
       ),
     );
   }
