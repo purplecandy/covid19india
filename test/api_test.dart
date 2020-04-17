@@ -57,4 +57,28 @@ void main() {
           jsonData.object[stateName]["districtData"].length);
     });
   });
+
+  group("Test hospital beds api", () {
+    test("Get all hospital data", () async {
+      final jsonData = await Repository.getHospitalData();
+      expect(jsonData.object["data"]["regional"].length, 37);
+    });
+
+    test("Get all district data by state", () async {
+      final stateName = "Andhra Pradesh";
+      final jsonData = await Repository.getHospitalData();
+      final data = await filterHospitalsByRegion(stateName, jsonData.object);
+      expect(data.state, Status.success);
+      expect(data.object, {
+        "state": "Andhra Pradesh",
+        "ruralHospitals": 193,
+        "ruralBeds": 6480,
+        "urbanHospitals": 65,
+        "urbanBeds": 16658,
+        "totalHospitals": 258,
+        "totalBeds": 23138,
+        "asOn": "2017-01-01T00:00:00.000Z"
+      });
+    });
+  });
 }

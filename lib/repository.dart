@@ -33,6 +33,12 @@ class Repository extends ChangeNotifier {
         districtData = data.object;
       }
     });
+
+    await getHospitalData().then((data) {
+      if (data.state == Status.success) {
+        hospitalBeds = data.object;
+      }
+    });
     notifyListeners();
   }
 
@@ -66,6 +72,20 @@ class Repository extends ChangeNotifier {
 
   static Future<AsyncResponse> getDistrictData() async {
     final url = Urls.districtRoot;
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        return AsyncResponse(Status.success, json.decode(response.body));
+      } else {
+        throw Exception("Request wasn't successfull");
+      }
+    } catch (e) {
+      return AsyncResponse(Status.exception, e);
+    }
+  }
+
+  static Future<AsyncResponse> getHospitalData() async {
+    final url = Urls.root + Urls.hospitalBeds;
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {

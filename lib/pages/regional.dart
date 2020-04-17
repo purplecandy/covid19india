@@ -3,6 +3,7 @@ import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:covid19india/models/district.dart';
 import 'package:covid19india/models/entity.dart';
+import 'package:covid19india/models/hospital.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
 import 'package:covid19india/widgets/chart_widget.dart';
@@ -25,6 +26,7 @@ class _RegionalPageState extends State<RegionalPage> {
   final bloc = RegionalStatsBloc();
   final blocData = RegionalStatsData();
   final blocDistrict = RegionalDistrictBloc();
+  final blocHospital = RegionalHospitalsData();
 
   int activeIndex = 0;
 
@@ -52,6 +54,8 @@ class _RegionalPageState extends State<RegionalPage> {
         {"state_name": stateName, "json_data": repo.casesCountHistory});
     blocDistrict.dispatch(RegionalAction.fetch,
         {"state_name": stateName, "json_data": repo.districtData});
+    blocHospital.dispatch(RegionalAction.fetch,
+        {"state_name": stateName, "json_data": repo.hospitalBeds});
   }
 
   @override
@@ -62,104 +66,108 @@ class _RegionalPageState extends State<RegionalPage> {
           create: (_) => blocData,
           child: Provider<RegionalDistrictBloc>(
             create: (_) => blocDistrict,
-            child: SafeArea(
-                top: false,
-                minimum: EdgeInsets.only(top: 8),
-                child: Builder(
-                    builder: (context) => CustomScrollView(
-                          key: PageStorageKey("sad"),
-                          slivers: <Widget>[
-                            SliverOverlapInjector(
-                              // This is the flip side of the SliverOverlapAbsorber above.
-                              handle: NestedScrollView
-                                  .sliverOverlapAbsorberHandleFor(context),
-                            ),
-                            SliverList(
-                                delegate: SliverChildListDelegate(
-                              [
-                                MetaData(),
-                                HeaderTile(
-                                  title: "Yesterday",
-                                  days: 1,
-                                ),
-                                HeaderTile(
-                                  title: "Last week",
-                                  days: 7,
-                                ),
-                                HeaderTile(
-                                  title: "Last month",
-                                  days: 30,
-                                ),
-                                DistrictData(),
-                                Container(
-                                  height: 150,
-                                  child: CupertinoSegmentedControl<int>(
-                                      children: {
-                                        0: Text("Cummulative"),
-                                        1: Text("Daily")
-                                      },
-                                      groupValue: activeIndex,
-                                      onValueChanged: (v) {
-                                        setState(() {
-                                          activeIndex = v;
-                                        });
-                                      }),
-                                ),
-                                ConfirmedChartDaily(
-                                  backgroundColor: Colors.red.shade100,
-                                  barColor:
-                                      charts.MaterialPalette.red.shadeDefault,
-                                  title: "Confirmed",
-                                  toolTipColor: Colors.red,
-                                  type: "confirmed",
-                                ),
-                                SizedBox(
-                                  height: 40,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Card(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            "Total Recovered",
-                                            style: TextStyle(
-                                                fontSize: 21,
-                                                fontWeight: FontWeight.w700),
+            child: Provider<RegionalHospitalsData>(
+              create: (_) => blocHospital,
+              child: SafeArea(
+                  top: false,
+                  minimum: EdgeInsets.only(top: 8),
+                  child: Builder(
+                      builder: (context) => CustomScrollView(
+                            key: PageStorageKey("sad"),
+                            slivers: <Widget>[
+                              SliverOverlapInjector(
+                                // This is the flip side of the SliverOverlapAbsorber above.
+                                handle: NestedScrollView
+                                    .sliverOverlapAbsorberHandleFor(context),
+                              ),
+                              SliverList(
+                                  delegate: SliverChildListDelegate(
+                                [
+                                  MetaData(),
+                                  HeaderTile(
+                                    title: "Yesterday",
+                                    days: 1,
+                                  ),
+                                  HeaderTile(
+                                    title: "Last week",
+                                    days: 7,
+                                  ),
+                                  HeaderTile(
+                                    title: "Last month",
+                                    days: 30,
+                                  ),
+                                  DistrictData(),
+                                  HospitalData(),
+                                  Container(
+                                    height: 150,
+                                    child: CupertinoSegmentedControl<int>(
+                                        children: {
+                                          0: Text("Cummulative"),
+                                          1: Text("Daily")
+                                        },
+                                        groupValue: activeIndex,
+                                        onValueChanged: (v) {
+                                          setState(() {
+                                            activeIndex = v;
+                                          });
+                                        }),
+                                  ),
+                                  ConfirmedChartDaily(
+                                    backgroundColor: Colors.red.shade100,
+                                    barColor:
+                                        charts.MaterialPalette.red.shadeDefault,
+                                    title: "Confirmed",
+                                    toolTipColor: Colors.red,
+                                    type: "confirmed",
+                                  ),
+                                  SizedBox(
+                                    height: 40,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Card(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              "Total Recovered",
+                                              style: TextStyle(
+                                                  fontSize: 21,
+                                                  fontWeight: FontWeight.w700),
+                                            ),
                                           ),
-                                        ),
-                                        ConfirmedChartDaily(
-                                          backgroundColor:
-                                              Colors.green.shade100,
-                                          barColor: charts.MaterialPalette.green
-                                              .shadeDefault,
-                                          title: "Recovered",
-                                          toolTipColor: Colors.green,
-                                          type: "recovered",
-                                        ),
-                                      ],
+                                          ConfirmedChartDaily(
+                                            backgroundColor:
+                                                Colors.green.shade100,
+                                            barColor: charts.MaterialPalette
+                                                .green.shadeDefault,
+                                            title: "Recovered",
+                                            toolTipColor: Colors.green,
+                                            type: "recovered",
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(
-                                  height: 40,
-                                ),
-                                ConfirmedChartDaily(
-                                  backgroundColor: Colors.grey.shade100,
-                                  barColor:
-                                      charts.MaterialPalette.gray.shadeDefault,
-                                  title: "Deaths",
-                                  toolTipColor: Colors.grey,
-                                  type: "deaths",
-                                ),
-                              ],
-                            ))
-                          ],
-                        ))),
+                                  SizedBox(
+                                    height: 40,
+                                  ),
+                                  ConfirmedChartDaily(
+                                    backgroundColor: Colors.grey.shade100,
+                                    barColor: charts
+                                        .MaterialPalette.gray.shadeDefault,
+                                    title: "Deaths",
+                                    toolTipColor: Colors.grey,
+                                    type: "deaths",
+                                  ),
+                                ],
+                              ))
+                            ],
+                          ))),
+            ),
           )),
     );
   }
@@ -328,8 +336,6 @@ class DistrictData extends StatelessWidget {
         onSuccess: (context, event) {
           switch (event.state) {
             case RegionalState.done:
-              double padding = 8.0;
-              double cwidth = MediaQuery.of(context).size.width - padding * 2;
               return Padding(
                 padding:
                     const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
@@ -389,6 +395,203 @@ class DistrictData extends StatelessWidget {
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              );
+              break;
+            default:
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+          }
+        },
+        onError: (context, error) => Center(
+          child: Text(error.toString()),
+        ),
+      ),
+    );
+  }
+}
+
+class HospitalData extends StatelessWidget {
+  final List<Color> shades = [
+    Colors.pink.shade100,
+    Colors.pink.shade200,
+    Colors.pink.shade300,
+    Colors.pink.shade400,
+    Colors.pink.shade500
+  ];
+  HospitalData({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RegionalHospitalsData>(
+      builder: (c, bloc, w) => BlocBuilder<RegionalState, HospitalModel>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case RegionalState.done:
+              return Padding(
+                padding:
+                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
+                child: Card(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 8),
+                        child: Text(
+                          "Hospitals & Beds",
+                          style: TextStyle(
+                              fontSize: 21, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: <Widget>[
+                            Container(
+                              height: 100,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                  color: Colors.deepPurple.shade200,
+                                  borderRadius: BorderRadius.circular(6)),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  Text(event.object.totalHospitals.toString(),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700)),
+                                  Text(
+                                    "Hospitals",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700),
+                                  )
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: <Widget>[
+                                  Container(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                        color: Colors.indigo.shade200,
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: Center(
+                                      child: Text(
+                                        "Rural ${event.object.ruralH}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                        color: Colors.indigo.shade200,
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: Center(
+                                      child: Text(
+                                        "Urban ${event.object.urbanH}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Column(
+                                children: <Widget>[
+                                  Container(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                        color: Colors.deepOrange.shade200,
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: Center(
+                                      child: Text(
+                                        "Rural ${event.object.ruralB}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    height: 45,
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                        color: Colors.deepOrange.shade200,
+                                        borderRadius: BorderRadius.circular(6)),
+                                    child: Center(
+                                      child: Text(
+                                        "Urban ${event.object.urbanB}",
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Container(
+                              height: 100,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                  color: Colors.brown.shade200,
+                                  borderRadius: BorderRadius.circular(6)),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  Text(event.object.totalHospitals.toString(),
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700)),
+                                  Text(
+                                    "Beds",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
                     ],
                   ),
                 ),

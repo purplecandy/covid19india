@@ -2,6 +2,7 @@ import 'package:covid19india/async.dart';
 import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/models/district.dart';
 import 'package:covid19india/models/entity.dart';
+import 'package:covid19india/models/hospital.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/parsers.dart';
 
@@ -124,6 +125,35 @@ class RegionalDistrictBloc
         if (districts.length < 5) limit = districts.length;
         districts.sort((a, b) => b.confirmedCases.compareTo(a.confirmedCases));
         updateState(RegionalState.done, districts.sublist(0, limit));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
+class RegionalHospitalsData
+    extends BlocBase<RegionalState, RegionalAction, HospitalModel> {
+  RegionalHospitalsData()
+      : super(state: RegionalState.loading, object: HospitalModel());
+
+  @override
+  void dispatch(RegionalAction actionState, [Map<String, dynamic> data]) {
+    switch (actionState) {
+      case RegionalAction.fetch:
+        _fetch(data["state_name"], data["json_data"]);
+        break;
+      default:
+    }
+  }
+
+  void _fetch(String stateName, Map<String, dynamic> jsonData) async {
+    filterHospitalsByRegion(stateName, jsonData).then((data) {
+      if (data.state == Status.success) {
+        updateState(RegionalState.done, HospitalModel.fromJson(data.object));
       }
     });
   }

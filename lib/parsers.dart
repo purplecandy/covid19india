@@ -65,3 +65,23 @@ Future<AsyncResponse> filterDistrictsByRegion(
     return AsyncResponse(Status.exception, e);
   }
 }
+
+Future<AsyncResponse> filterHospitalsByRegion(
+    String stateName, Map<String, dynamic> jsonData) async {
+  try {
+    if (jsonData.isNotEmpty) {
+      Map<String, dynamic> dataSet = {};
+      for (var item in jsonData["data"]["regional"]) {
+        if (item["state"].toLowerCase() == stateName.toLowerCase())
+          dataSet = item;
+      }
+      return dataSet.length > 0
+          ? AsyncResponse(Status.success, dataSet)
+          : AsyncResponse(Status.error, "Couldn't find any record");
+    } else {
+      throw Exception("Request wasn't successfull");
+    }
+  } catch (e) {
+    return AsyncResponse(Status.exception, e);
+  }
+}
