@@ -14,6 +14,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _controller = ScrollController();
+  final _tabChildren = <Widget>[
+    RegionalPage(
+      key: UniqueKey(),
+    ),
+    Container()
+  ];
 
   @override
   void didChangeDependencies() {
@@ -72,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ];
             },
-            body: TabBarView(children: <Widget>[RegionalPage(), Container()]),
+            body: TabBarView(key: UniqueKey(), children: _tabChildren),
           ),
           floatingActionButton: Consumer<Preferences>(
             builder: (c, pref, _) => pref.initialized

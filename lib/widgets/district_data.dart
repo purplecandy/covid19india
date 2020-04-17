@@ -1,3 +1,5 @@
+import 'package:covid19india/widgets/empty_result.dart';
+import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +24,11 @@ class DistrictData extends StatelessWidget {
         bloc: bloc,
         onSuccess: (context, event) {
           switch (event.state) {
+            case RegionalState.empty:
+              return EmptyResultBuilder(
+                message:
+                    "We don't have any district level records for this state.",
+              );
             case RegionalState.done:
               return Padding(
                 padding:
@@ -87,10 +94,12 @@ class DistrictData extends StatelessWidget {
                 ),
               );
               break;
-            default:
-              return Center(
-                child: CircularProgressIndicator(),
+            case RegionalState.loading:
+              return ProgressBuilder(
+                message: "Finding district level data",
               );
+            default:
+              return Text("Hello WOrld");
           }
         },
         onError: (context, error) => Center(

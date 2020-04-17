@@ -1,9 +1,11 @@
+import 'package:covid19india/widgets/empty_result.dart';
 import 'package:flutter/material.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'color_tile.dart';
+import 'progress_builder.dart';
 
 class RegionalOverallData extends StatelessWidget {
   const RegionalOverallData({Key key}) : super(key: key);
@@ -15,6 +17,10 @@ class RegionalOverallData extends StatelessWidget {
         bloc: bloc,
         onSuccess: (context, event) {
           switch (event.state) {
+            case RegionalState.empty:
+              return EmptyResultBuilder(
+                message: "We don't have any cases records for this state.",
+              );
             case RegionalState.done:
               double padding = 8.0;
               double cwidth = MediaQuery.of(context).size.width - padding * 2;
@@ -84,10 +90,12 @@ class RegionalOverallData extends StatelessWidget {
                 ),
               );
               break;
-            default:
-              return Center(
-                child: CircularProgressIndicator(),
+            case RegionalState.loading:
+              return ProgressBuilder(
+                message: "Loading overall data",
               );
+            default:
+              return Text("Hello World");
           }
         },
         onError: (context, error) => Center(

@@ -6,7 +6,7 @@ import 'package:covid19india/models/hospital.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/parsers.dart';
 
-enum RegionalState { loading, done }
+enum RegionalState { loading, done, empty }
 enum RegionalAction {
   ///Regquires: `String:state_name`, `Map<String,dynamic>:json_data`
   fetch
@@ -37,6 +37,8 @@ class RegionalStatsBloc
       if (data.state == Status.success) {
         final model = RegionalStatsModel.fromJson(data.object);
         updateState(RegionalState.done, model);
+      } else if (data.state == Status.error) {
+        updateState(RegionalState.empty, event.object);
       }
     });
   }
@@ -66,6 +68,8 @@ class RegionalStatsData extends BlocBase<RegionalState, RegionalAction,
               data: RegionalStatsModel.fromJson(item["regional"])));
         }
         updateState(RegionalState.done, entities);
+      } else if (data.state == Status.error) {
+        updateState(RegionalState.empty, event.object);
       }
     });
   }
@@ -79,7 +83,7 @@ class RegionalStatsData extends BlocBase<RegionalState, RegionalAction,
     };
     int len = event.object.length;
     var prev, curr = event.object.last.data;
-    if (days > len) {
+    if (days + 1 > len) {
       prev = event.object.first.data;
     } else {
       prev = event.object[len - days - 1].data;
@@ -124,6 +128,8 @@ class RegionalDistrictBloc
         if (districts.length < 5) limit = districts.length;
         districts.sort((a, b) => b.confirmedCases.compareTo(a.confirmedCases));
         updateState(RegionalState.done, districts.sublist(0, limit));
+      } else if (data.state == Status.error) {
+        updateState(RegionalState.empty, event.object);
       }
     });
   }
@@ -153,6 +159,8 @@ class RegionalHospitalsData
     filterHospitalsByRegion(stateName, jsonData).then((data) {
       if (data.state == Status.success) {
         updateState(RegionalState.done, HospitalModel.fromJson(data.object));
+      } else if (data.state == Status.error) {
+        updateState(RegionalState.empty, event.object);
       }
     });
   }

@@ -1,3 +1,5 @@
+import 'package:covid19india/widgets/empty_result.dart';
+import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +23,11 @@ class HospitalData extends StatelessWidget {
         bloc: bloc,
         onSuccess: (context, event) {
           switch (event.state) {
+            case RegionalState.empty:
+              return EmptyResultBuilder(
+                message:
+                    "We don't have any hospitals and beds records for this state.",
+              );
             case RegionalState.done:
               return Padding(
                 padding:
@@ -196,8 +203,8 @@ class HospitalData extends StatelessWidget {
               );
               break;
             default:
-              return Center(
-                child: CircularProgressIndicator(),
+              return ProgressBuilder(
+                message: "Calculating hospitals and beds",
               );
           }
         },
