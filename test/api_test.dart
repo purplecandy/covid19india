@@ -41,4 +41,20 @@ void main() {
       expect(data.object, "Couldn't find any record");
     });
   });
+
+  group("Test district wise api", () {
+    test("Get all district data", () async {
+      final jsonData = await Repository.getDistrictData();
+      expect(jsonData.object.containsKey("Uttar Pradesh"), true);
+    });
+
+    test("Get all district data by state", () async {
+      final stateName = "Jammu and Kashmir";
+      final jsonData = await Repository.getDistrictData();
+      final data = await filterDistrictsByRegion(stateName, jsonData.object);
+      expect(data.state, Status.success);
+      expect(data.object.length,
+          jsonData.object[stateName]["districtData"].length);
+    });
+  });
 }

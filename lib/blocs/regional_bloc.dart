@@ -1,5 +1,6 @@
 import 'package:covid19india/async.dart';
 import 'package:covid19india/bloc_base.dart';
+import 'package:covid19india/models/district.dart';
 import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/parsers.dart';
@@ -89,6 +90,42 @@ class RegionalStatsData extends BlocBase<RegionalState, RegionalAction,
         cases["confirmed"] - (cases["recovered"] + cases["deaths"]);
 
     return cases;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
+class RegionalDistrictBloc
+    extends BlocBase<RegionalState, RegionalAction, List<DistrictModel>> {
+  RegionalDistrictBloc() : super(state: RegionalState.loading, object: []);
+
+  @override
+  void dispatch(RegionalAction actionState, [Map<String, dynamic> data]) {
+    switch (actionState) {
+      case RegionalAction.fetch:
+        _fetch(data["state_name"], data["json_data"]);
+        break;
+      default:
+    }
+  }
+
+  void _fetch(String stateName, Map<String, dynamic> jsonData) async {
+    filterDistrictsByRegion(stateName, jsonData).then((data) {
+      if (data.state == Status.success) {
+        List<DistrictModel> districts = [];
+        for (var item in data.object) {
+          print(item);
+          districts.add(DistrictModel.fromJson(item));
+        }
+        int limit = 5;
+        if (districts.length < 5) limit = districts.length;
+        districts.sort((a, b) => b.confirmedCases.compareTo(a.confirmedCases));
+        updateState(RegionalState.done, districts.sublist(0, limit));
+      }
+    });
   }
 
   @override

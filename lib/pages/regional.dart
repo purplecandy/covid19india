@@ -1,9 +1,12 @@
+import 'package:covid19india/app.dart';
 import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
+import 'package:covid19india/models/district.dart';
 import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
 import 'package:covid19india/widgets/chart_widget.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
@@ -21,6 +24,9 @@ class RegionalPage extends StatefulWidget {
 class _RegionalPageState extends State<RegionalPage> {
   final bloc = RegionalStatsBloc();
   final blocData = RegionalStatsData();
+  final blocDistrict = RegionalDistrictBloc();
+
+  int activeIndex = 0;
 
   @override
   void initState() {
@@ -44,6 +50,8 @@ class _RegionalPageState extends State<RegionalPage> {
         {"state_name": stateName, "json_data": repo.casesCountLatest});
     blocData.dispatch(RegionalAction.fetch,
         {"state_name": stateName, "json_data": repo.casesCountHistory});
+    blocDistrict.dispatch(RegionalAction.fetch,
+        {"state_name": stateName, "json_data": repo.districtData});
   }
 
   @override
@@ -52,67 +60,107 @@ class _RegionalPageState extends State<RegionalPage> {
       create: (_) => bloc,
       child: Provider<RegionalStatsData>(
           create: (_) => blocData,
-          child: SafeArea(
-              child: Builder(
-                  builder: (context) => CustomScrollView(
-                        key: PageStorageKey("sad"),
-                        slivers: <Widget>[
-                          SliverOverlapInjector(
-                            // This is the flip side of the SliverOverlapAbsorber above.
-                            handle:
-                                NestedScrollView.sliverOverlapAbsorberHandleFor(
-                                    context),
-                          ),
-                          SliverList(
-                              delegate: SliverChildListDelegate(
-                            [
-                              MetaData(),
-                              HeaderTile(
-                                title: "Yesterday",
-                                days: 1,
-                              ),
-                              HeaderTile(
-                                title: "Last week",
-                                days: 7,
-                              ),
-                              HeaderTile(
-                                title: "Last month",
-                                days: 30,
-                              ),
-                              ConfirmedChartDaily(
-                                backgroundColor: Colors.red.shade100,
-                                barColor:
-                                    charts.MaterialPalette.red.shadeDefault,
-                                title: "Confirmed",
-                                toolTipColor: Colors.red,
-                                type: "confirmed",
-                              ),
-                              SizedBox(
-                                height: 40,
-                              ),
-                              ConfirmedChartDaily(
-                                backgroundColor: Colors.green.shade100,
-                                barColor:
-                                    charts.MaterialPalette.green.shadeDefault,
-                                title: "Recovered",
-                                toolTipColor: Colors.green,
-                                type: "recovered",
-                              ),
-                              SizedBox(
-                                height: 40,
-                              ),
-                              ConfirmedChartDaily(
-                                backgroundColor: Colors.grey.shade100,
-                                barColor:
-                                    charts.MaterialPalette.gray.shadeDefault,
-                                title: "Deaths",
-                                toolTipColor: Colors.grey,
-                                type: "deaths",
-                              )
-                            ],
-                          ))
-                        ],
-                      )))),
+          child: Provider<RegionalDistrictBloc>(
+            create: (_) => blocDistrict,
+            child: SafeArea(
+                top: false,
+                minimum: EdgeInsets.only(top: 8),
+                child: Builder(
+                    builder: (context) => CustomScrollView(
+                          key: PageStorageKey("sad"),
+                          slivers: <Widget>[
+                            SliverOverlapInjector(
+                              // This is the flip side of the SliverOverlapAbsorber above.
+                              handle: NestedScrollView
+                                  .sliverOverlapAbsorberHandleFor(context),
+                            ),
+                            SliverList(
+                                delegate: SliverChildListDelegate(
+                              [
+                                MetaData(),
+                                HeaderTile(
+                                  title: "Yesterday",
+                                  days: 1,
+                                ),
+                                HeaderTile(
+                                  title: "Last week",
+                                  days: 7,
+                                ),
+                                HeaderTile(
+                                  title: "Last month",
+                                  days: 30,
+                                ),
+                                DistrictData(),
+                                Container(
+                                  height: 150,
+                                  child: CupertinoSegmentedControl<int>(
+                                      children: {
+                                        0: Text("Cummulative"),
+                                        1: Text("Daily")
+                                      },
+                                      groupValue: activeIndex,
+                                      onValueChanged: (v) {
+                                        setState(() {
+                                          activeIndex = v;
+                                        });
+                                      }),
+                                ),
+                                ConfirmedChartDaily(
+                                  backgroundColor: Colors.red.shade100,
+                                  barColor:
+                                      charts.MaterialPalette.red.shadeDefault,
+                                  title: "Confirmed",
+                                  toolTipColor: Colors.red,
+                                  type: "confirmed",
+                                ),
+                                SizedBox(
+                                  height: 40,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Card(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            "Total Recovered",
+                                            style: TextStyle(
+                                                fontSize: 21,
+                                                fontWeight: FontWeight.w700),
+                                          ),
+                                        ),
+                                        ConfirmedChartDaily(
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          barColor: charts.MaterialPalette.green
+                                              .shadeDefault,
+                                          title: "Recovered",
+                                          toolTipColor: Colors.green,
+                                          type: "recovered",
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 40,
+                                ),
+                                ConfirmedChartDaily(
+                                  backgroundColor: Colors.grey.shade100,
+                                  barColor:
+                                      charts.MaterialPalette.gray.shadeDefault,
+                                  title: "Deaths",
+                                  toolTipColor: Colors.grey,
+                                  type: "deaths",
+                                ),
+                              ],
+                            ))
+                          ],
+                        ))),
+          )),
     );
   }
 }
@@ -257,6 +305,104 @@ class ColorBadge extends StatelessWidget {
         content,
         style: TextStyle(
             color: textColor, fontSize: 19, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class DistrictData extends StatelessWidget {
+  final List<Color> shades = [
+    Colors.pink.shade100,
+    Colors.pink.shade200,
+    Colors.pink.shade300,
+    Colors.pink.shade400,
+    Colors.pink.shade500
+  ];
+  DistrictData({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<RegionalDistrictBloc>(
+      builder: (c, bloc, w) => BlocBuilder<RegionalState, List<DistrictModel>>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case RegionalState.done:
+              double padding = 8.0;
+              double cwidth = MediaQuery.of(context).size.width - padding * 2;
+              return Padding(
+                padding:
+                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
+                child: Card(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 8),
+                        child: Text(
+                          "Most affected districts",
+                          style: TextStyle(
+                              fontSize: 21, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 8.0, right: 8.0, bottom: 8.0),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: event.object.length,
+                          itemBuilder: (context, index) => Container(
+                            height: 40,
+                            margin: EdgeInsets.all(1),
+                            padding: EdgeInsets.only(left: 12, right: 12),
+                            decoration: BoxDecoration(
+                                // color: Colors.red.shade100,
+                                color: shades[(shades.length - 1) - index]
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(9)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  event.object[index].name,
+                                  style: TextStyle(
+                                      color: AppTheme.isDark(context)
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontWeight: FontWeight.w300),
+                                ),
+                                Text(
+                                  event.object[index].confirmedCases.toString(),
+                                  style: TextStyle(
+                                      // fontSize: 18,
+                                      // color: Color(0xFFff073a),
+                                      color: AppTheme.isDark(context)
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontWeight: FontWeight.w600),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              break;
+            default:
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+          }
+        },
+        onError: (context, error) => Center(
+          child: Text(error.toString()),
+        ),
       ),
     );
   }

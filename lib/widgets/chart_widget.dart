@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:covid19india/app.dart';
+import 'dart:math';
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_flutter/src/text_element.dart' as t;
+import 'package:charts_flutter/src/text_style.dart' as style;
 
 class _TooltipText with ChangeNotifier {
   String value = "";
@@ -92,9 +95,9 @@ class _Chart<T> extends StatelessWidget {
             children: [
               Text(
                 tooltipText.date != null
-                    ? DateFormat.MMMMd().format(tooltipText.date) +
-                        " - " +
-                        tooltipText.value
+                    ? tooltipText.value +
+                        " cases on " +
+                        DateFormat.MMMMd().format(tooltipText.date)
                     : "",
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -112,7 +115,14 @@ class _Chart<T> extends StatelessWidget {
                       measureFn: yAxisData,
                     )
                   ],
-
+                  animationDuration: Duration(milliseconds: 450),
+                  behaviors: [
+                    charts.LinePointHighlighter(
+                        symbolRenderer:
+                            CustomCircleSymbolRenderer(tooltipText)),
+                    charts.SelectNearest(
+                        eventTrigger: charts.SelectionTrigger.tapAndDrag)
+                  ],
                   // primaryMeasureAxis: charts.NumericAxisSpec(
                   //     renderSpec: charts.GridlineRendererSpec(
                   //         labelStyle: charts.TextStyleSpec(
@@ -155,5 +165,33 @@ class _Chart<T> extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class CustomCircleSymbolRenderer extends charts.CircleSymbolRenderer {
+  final _TooltipText text;
+  CustomCircleSymbolRenderer(this.text);
+  @override
+  void paint(charts.ChartCanvas canvas, Rectangle<num> bounds,
+      {List<int> dashPattern,
+      charts.Color fillColor,
+      charts.FillPatternType fillPattern,
+      charts.Color strokeColor,
+      double strokeWidthPx}) {
+    super.paint(canvas, bounds,
+        dashPattern: dashPattern,
+        fillColor: fillColor,
+        fillPattern: fillPattern,
+        strokeColor: strokeColor,
+        strokeWidthPx: strokeWidthPx);
+    canvas.drawRect(
+        Rectangle(
+            bounds.left - 5, bounds.top, bounds.width + 30, bounds.height + 10),
+        fill: charts.Color.white);
+    var textStyle = style.TextStyle();
+    textStyle.color = charts.Color.black;
+    textStyle.fontSize = 21;
+    canvas.drawText(t.TextElement(text.value, style: textStyle),
+        (bounds.left).round(), (bounds.top - 30).round());
   }
 }

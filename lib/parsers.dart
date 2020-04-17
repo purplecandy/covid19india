@@ -40,3 +40,28 @@ Future<AsyncResponse> filterCasesStatsHistory(
     return AsyncResponse(Status.exception, e);
   }
 }
+
+Future<AsyncResponse> filterDistrictsByRegion(
+    String stateName, Map<String, dynamic> jsonData) async {
+  try {
+    if (jsonData.isNotEmpty) {
+      List<Map<String, dynamic>> listOfDistricts = [];
+      if (jsonData.containsKey(stateName)) {
+        // var keys = jsonData[stateName]["districtData"];
+        for (var key in jsonData[stateName]["districtData"].keys) {
+          listOfDistricts.add({
+            "name": key,
+            "confirmed": jsonData[stateName]["districtData"][key]["confirmed"]
+          });
+        }
+      }
+      return listOfDistricts.length > 0
+          ? AsyncResponse(Status.success, listOfDistricts)
+          : AsyncResponse(Status.error, "Couldn't find any record");
+    } else {
+      throw Exception("Request wasn't successfull");
+    }
+  } catch (e) {
+    return AsyncResponse(Status.exception, e);
+  }
+}
