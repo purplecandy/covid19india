@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:covid19india/widgets/color_tile.dart';
+import 'package:covid19india/preferences.dart';
 import 'dart:math';
 
 class RegionalPage extends StatefulWidget {
@@ -29,15 +30,20 @@ class _RegionalPageState extends State<RegionalPage> {
   @override
   void didChangeDependencies() {
     final repo = Provider.of<Repository>(context, listen: true);
-    if (repo.casesCountLatest.isNotEmpty) startup(repo);
+    final pref = Provider.of<Preferences>(context, listen: true);
+    if (repo.casesCountLatest.isNotEmpty) {
+      if (pref.initialized && pref.defaultStateName.isNotEmpty) {
+        startup(repo, pref.defaultStateName);
+      }
+    }
     super.didChangeDependencies();
   }
 
-  void startup(Repository repo) {
+  void startup(Repository repo, String stateName) {
     bloc.dispatch(RegionalAction.fetch,
-        {"state_name": "Maharastra", "json_data": repo.casesCountLatest});
+        {"state_name": stateName, "json_data": repo.casesCountLatest});
     blocData.dispatch(RegionalAction.fetch,
-        {"state_name": "Maharastra", "json_data": repo.casesCountHistory});
+        {"state_name": stateName, "json_data": repo.casesCountHistory});
   }
 
   @override
@@ -70,8 +76,8 @@ class _RegionalPageState extends State<RegionalPage> {
                                 days: 7,
                               ),
                               HeaderTile(
-                                title: "Last 2 weeks",
-                                days: 14,
+                                title: "Last month",
+                                days: 30,
                               ),
                               ConfirmedChartDaily(
                                 backgroundColor: Colors.red.shade100,

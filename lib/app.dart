@@ -1,6 +1,8 @@
+import 'package:covid19india/preferences.dart';
 import 'package:covid19india/repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rxdart/subjects.dart' show BehaviorSubject;
 import 'package:covid19india/pages/home.dart';
 
@@ -26,10 +28,21 @@ class AppBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<Repository>(
       create: (_) => Repository(),
-      child: MaterialApp(
-        themeMode: mode,
-        theme: mode == ThemeMode.light ? ThemeData.light() : ThemeData.dark(),
-        routes: {"/": (context) => HomePage()},
+      child: ChangeNotifierProvider<Preferences>(
+        create: (_) => Preferences(),
+        child: MaterialApp(
+          themeMode: mode,
+          theme: mode == ThemeMode.light
+              ? ThemeData.light().copyWith(
+                  textTheme: GoogleFonts.robotoTextTheme(
+                  ThemeData.light().textTheme,
+                ))
+              : ThemeData.dark().copyWith(
+                  textTheme: GoogleFonts.robotoTextTheme(
+                  ThemeData.dark().textTheme,
+                )),
+          routes: {"/": (context) => HomePage()},
+        ),
       ),
     );
   }

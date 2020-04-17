@@ -1,6 +1,9 @@
 import 'package:covid19india/app.dart';
 import 'package:covid19india/pages/regional.dart';
+import 'package:covid19india/preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:covid19india/widgets/state_picker.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -11,46 +14,84 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _controller = ScrollController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    startup();
+  }
+
+  void startup() {
+    final pref = Provider.of<Preferences>(context, listen: true);
+    if (pref.initialized) {
+      if (pref.defaultStateName.isEmpty)
+        showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (context) => StatePicker(
+                  pref: pref,
+                  isDialog: false,
+                ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2, // This is the number of tabs.
       child: Scaffold(
-        body: NestedScrollView(
-          controller: _controller,
-          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-            return <Widget>[
-              SliverOverlapAbsorber(
-                handle:
-                    NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                child: SliverAppBar(
-                  title: const Text(
-                      'COVID-19 India'), // This is the title in the app bar.
-                  pinned: false,
-                  expandedHeight: 80.0,
-                  forceElevated: innerBoxIsScrolled,
-                  actions: <Widget>[SwitchTheme()],
-                  bottom: TabBar(
-                    // These are the widgets to put in each tab in the tab bar.
-                    tabs: [
-                      Tab(
-                        text: "Maharastra",
-                      ),
-                      Tab(
-                        text: "Country",
-                      )
-                    ],
+          body: NestedScrollView(
+            controller: _controller,
+            headerSliverBuilder:
+                (BuildContext context, bool innerBoxIsScrolled) {
+              return <Widget>[
+                SliverOverlapAbsorber(
+                  handle:
+                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  child: SliverAppBar(
+                    title: const Text(
+                        'COVID-19 India'), // This is the title in the app bar.
+                    pinned: false,
+                    expandedHeight: 80.0,
+                    forceElevated: innerBoxIsScrolled,
+                    actions: <Widget>[SwitchTheme()],
+                    bottom: TabBar(
+                      // These are the widgets to put in each tab in the tab bar.
+                      tabs: [
+                        Consumer<Preferences>(
+                          builder: (c, pref, _) => Tab(
+                            text: pref.initialized ? pref.defaultStateName : "",
+                          ),
+                        ),
+                        Tab(
+                          text: "India",
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            // These are the contents of the tab views, below the tabs.
-            children: [RegionalPage(), Container()],
+              ];
+            },
+            body: TabBarView(children: <Widget>[RegionalPage(), Container()]),
           ),
-        ),
-      ),
+          floatingActionButton: Consumer<Preferences>(
+            builder: (c, pref, _) => pref.initialized
+                ? (pref.defaultStateName.isEmpty
+                    ? Container()
+                    : FloatingActionButton(
+                        child: Icon(Icons.menu),
+                        onPressed: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) => StatePicker(
+                                    isDialog: false,
+                                    pref: Provider.of<Preferences>(context,
+                                        listen: true),
+                                  ));
+                        },
+                      ))
+                : Container(),
+          )),
     );
   }
 }
