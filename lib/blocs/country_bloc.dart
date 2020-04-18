@@ -3,6 +3,7 @@ import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/models/countrystats_model.dart';
 import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
+import 'package:covid19india/models/testing.dart';
 import 'package:covid19india/parsers.dart';
 
 enum CountryState { loading, done, empty, exception }
@@ -136,6 +137,35 @@ class CountryRegionalBloc
         updateStateWithError(data.object);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
+class CountryTestingBloc
+    extends BlocBase<CountryState, CountryAction, TestingModel> {
+  CountryTestingBloc()
+      : super(state: CountryState.loading, object: TestingModel());
+
+  @override
+  void dispatch(CountryAction actionState, [Map<String, dynamic> data]) {
+    switch (actionState) {
+      case CountryAction.fetch:
+        _fetch(data["json_data"]);
+        break;
+      default:
+    }
+  }
+
+  void _fetch(Map<String, dynamic> jsonData) async {
+    if (jsonData.isNotEmpty) {
+      updateState(CountryState.done, TestingModel.fromJson(jsonData["data"]));
+    } else {
+      updateStateWithError(Exception("Request wasn't successfull"));
+    }
   }
 
   @override

@@ -7,6 +7,7 @@ import 'package:covid19india/repository.dart';
 import 'package:covid19india/widgets/district_data.dart';
 // import 'package:covid19india/widgets/error_builder.dart';
 import 'package:covid19india/widgets/overall_data.dart';
+import 'package:covid19india/widgets/testing_data.dart';
 // import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class _CountryPageState extends State<CountryPage>
   final bloc = CountryOverallBloc();
   final blocData = CountryStatsBloc();
   final blocRegional = CountryRegionalBloc();
+  final blocTesting = CountryTestingBloc();
   @override
   bool get wantKeepAlive => true;
 
@@ -57,6 +59,10 @@ class _CountryPageState extends State<CountryPage>
     if (repo.casesCountHistory != null)
       blocData
           .dispatch(CountryAction.fetch, {"json_data": repo.casesCountHistory});
+
+    if (repo.testingDataLatest != null)
+      blocTesting
+          .dispatch(CountryAction.fetch, {"json_data": repo.testingDataLatest});
   }
 
   @override
@@ -75,29 +81,32 @@ class _CountryPageState extends State<CountryPage>
         create: (_) => blocData,
         child: Provider<CountryRegionalBloc>(
           create: (_) => blocRegional,
-          child: SafeArea(
-              top: false,
-              minimum: EdgeInsets.only(top: 8),
-              child: Builder(
-                  builder: (context) => CustomScrollView(
-                        key: PageStorageKey("sad"),
-                        slivers: <Widget>[
-                          SliverOverlapInjector(
-                            // This is the flip side of the SliverOverlapAbsorber above.
-                            handle:
-                                NestedScrollView.sliverOverlapAbsorberHandleFor(
-                                    context),
-                          ),
-                          SliverList(
-                              delegate: SliverChildListDelegate(
-                            [
-                              CountryOverallData(),
-                              PastCountryDataTiles(),
-                              CountryRegionalData()
-                            ],
-                          ))
-                        ],
-                      ))),
+          child: Provider<CountryTestingBloc>(
+            create: (_) => blocTesting,
+            child: SafeArea(
+                top: false,
+                minimum: EdgeInsets.only(top: 8),
+                child: Builder(
+                    builder: (context) => CustomScrollView(
+                          key: PageStorageKey("sad"),
+                          slivers: <Widget>[
+                            SliverOverlapInjector(
+                              // This is the flip side of the SliverOverlapAbsorber above.
+                              handle: NestedScrollView
+                                  .sliverOverlapAbsorberHandleFor(context),
+                            ),
+                            SliverList(
+                                delegate: SliverChildListDelegate(
+                              [
+                                CountryOverallData(),
+                                PastCountryDataTiles(),
+                                CountryRegionalData(),
+                                TestingDataWidget()
+                              ],
+                            ))
+                          ],
+                        ))),
+          ),
         ),
       ),
     );
