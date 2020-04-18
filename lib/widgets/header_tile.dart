@@ -1,3 +1,4 @@
+import 'package:covid19india/widgets/error_builder.dart';
 import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
@@ -19,6 +20,9 @@ class PastRegionalDataTiles extends StatelessWidget {
       builder: (c, bloc, _) =>
           BlocBuilder<RegionalState, List<Entity<RegionalStatsModel>>>(
         bloc: bloc,
+        onError: (context, error) => DefaultErrorBuilder(
+          error: error,
+        ),
         onSuccess: (context, event) {
           switch (event.state) {
             case RegionalState.empty:

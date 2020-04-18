@@ -3,6 +3,7 @@ import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:covid19india/models/entity.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/repository.dart';
+import 'package:covid19india/widgets/error_builder.dart';
 import 'package:covid19india/widgets/overall_data.dart';
 import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/cupertino.dart';
@@ -103,23 +104,25 @@ class _RegionalPageState extends State<RegionalPage>
   void didChangeDependencies() {
     final repo = Provider.of<Repository>(context, listen: true);
     final pref = Provider.of<Preferences>(context, listen: true);
-    if (repo.casesCountLatest.isNotEmpty) {
-      if (pref.initialized && pref.defaultStateName.isNotEmpty) {
-        startup(repo, pref.defaultStateName);
-      }
+    if (pref.initialized && pref.defaultStateName.isNotEmpty) {
+      startup(repo, pref.defaultStateName);
     }
     super.didChangeDependencies();
   }
 
   void startup(Repository repo, String stateName) {
-    bloc.dispatch(RegionalAction.fetch,
-        {"state_name": stateName, "json_data": repo.casesCountLatest});
-    blocData.dispatch(RegionalAction.fetch,
-        {"state_name": stateName, "json_data": repo.casesCountHistory});
-    blocDistrict.dispatch(RegionalAction.fetch,
-        {"state_name": stateName, "json_data": repo.districtData});
-    blocHospital.dispatch(RegionalAction.fetch,
-        {"state_name": stateName, "json_data": repo.hospitalBeds});
+    if (repo.casesCountLatest != null)
+      bloc.dispatch(RegionalAction.fetch,
+          {"state_name": stateName, "json_data": repo.casesCountLatest});
+    if (repo.casesCountHistory != null)
+      blocData.dispatch(RegionalAction.fetch,
+          {"state_name": stateName, "json_data": repo.casesCountHistory});
+    if (repo.districtData != null)
+      blocDistrict.dispatch(RegionalAction.fetch,
+          {"state_name": stateName, "json_data": repo.districtData});
+    if (repo.hospitalBeds != null)
+      blocHospital.dispatch(RegionalAction.fetch,
+          {"state_name": stateName, "json_data": repo.hospitalBeds});
   }
 
   @override
@@ -164,6 +167,10 @@ class _RegionalPageState extends State<RegionalPage>
                                     BlocBuilder<RegionalState,
                                             List<Entity<RegionalStatsModel>>>(
                                         bloc: blocData,
+                                        onError: (context, error) =>
+                                            DefaultErrorBuilder(
+                                              error: error,
+                                            ),
                                         onSuccess: (c, event) {
                                           switch (event.state) {
                                             case RegionalState.loading:

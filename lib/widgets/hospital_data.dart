@@ -1,4 +1,5 @@
 import 'package:covid19india/widgets/empty_result.dart';
+import 'package:covid19india/widgets/error_builder.dart';
 import 'package:covid19india/widgets/progress_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
@@ -21,6 +22,9 @@ class HospitalData extends StatelessWidget {
     return Consumer<RegionalHospitalsData>(
       builder: (c, bloc, w) => BlocBuilder<RegionalState, HospitalModel>(
         bloc: bloc,
+        onError: (context, error) => DefaultErrorBuilder(
+          error: error,
+        ),
         onSuccess: (context, event) {
           switch (event.state) {
             case RegionalState.empty:
@@ -208,9 +212,6 @@ class HospitalData extends StatelessWidget {
               );
           }
         },
-        onError: (context, error) => Center(
-          child: Text(error.toString()),
-        ),
       ),
     );
   }

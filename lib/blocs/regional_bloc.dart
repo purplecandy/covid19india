@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:covid19india/async.dart';
 import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/models/district.dart';
@@ -6,7 +8,7 @@ import 'package:covid19india/models/hospital.dart';
 import 'package:covid19india/models/regionalstats_model.dart';
 import 'package:covid19india/parsers.dart';
 
-enum RegionalState { loading, done, empty }
+enum RegionalState { loading, done, empty, exception }
 enum RegionalAction {
   ///Regquires: `String:state_name`, `Map<String,dynamic>:json_data`
   fetch
@@ -39,6 +41,8 @@ class RegionalStatsBloc
         updateState(RegionalState.done, model);
       } else if (data.state == Status.error) {
         updateState(RegionalState.empty, event.object);
+      } else {
+        updateStateWithError(data.object);
       }
     });
   }
@@ -70,6 +74,8 @@ class RegionalStatsData extends BlocBase<RegionalState, RegionalAction,
         updateState(RegionalState.done, entities);
       } else if (data.state == Status.error) {
         updateState(RegionalState.empty, event.object);
+      } else {
+        updateStateWithError(data.object);
       }
     });
   }
@@ -130,6 +136,8 @@ class RegionalDistrictBloc
         updateState(RegionalState.done, districts.sublist(0, limit));
       } else if (data.state == Status.error) {
         updateState(RegionalState.empty, event.object);
+      } else {
+        updateStateWithError(data.object);
       }
     });
   }
@@ -161,6 +169,8 @@ class RegionalHospitalsData
         updateState(RegionalState.done, HospitalModel.fromJson(data.object));
       } else if (data.state == Status.error) {
         updateState(RegionalState.empty, event.object);
+      } else {
+        updateStateWithError(data.object);
       }
     });
   }

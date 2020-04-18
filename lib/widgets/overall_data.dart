@@ -1,4 +1,5 @@
 import 'package:covid19india/widgets/empty_result.dart';
+import 'package:covid19india/widgets/error_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:covid19india/blocs/regional_bloc.dart';
 import 'package:provider/provider.dart';
@@ -95,11 +96,19 @@ class RegionalOverallData extends StatelessWidget {
                 message: "Loading overall data",
               );
             default:
-              return Text("Hello World");
+              return Container(
+                height: 150,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(Icons.error_outline),
+                  ],
+                ),
+              );
           }
         },
-        onError: (context, error) => Center(
-          child: Text(error.toString()),
+        onError: (context, error) => DefaultErrorBuilder(
+          error: error,
         ),
       ),
     );

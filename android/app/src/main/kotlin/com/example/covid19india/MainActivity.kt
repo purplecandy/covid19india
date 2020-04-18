@@ -1,4 +1,4 @@
-package com.example.covid19india
+package `in`.kibibyte.covid19india
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
