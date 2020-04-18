@@ -118,3 +118,16 @@ Future<AsyncResponse> filterCountryStatsHistory(
     return AsyncResponse(Status.exception, e);
   }
 }
+
+Future<AsyncResponse> filterCountryRegions(
+    Map<String, dynamic> jsonData) async {
+  try {
+    if (jsonData["success"] == true) {
+      return AsyncResponse(Status.success, jsonData["data"]["regional"]);
+    } else {
+      throw Exception("Request wasn't successfull");
+    }
+  } catch (e) {
+    return AsyncResponse(Status.exception, e);
+  }
+}
