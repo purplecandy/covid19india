@@ -87,7 +87,7 @@ class TestingDataWidget extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Individuals ${event.object.totalIndividualsTested}",
+                                        "${event.object.totalIndividualsTested} Individuals",
                                         style: TextStyle(
                                             color: Colors.indigo,
                                             fontSize: 16,
@@ -106,7 +106,7 @@ class TestingDataWidget extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Postive Cases ${event.object.totalPositiveCases}",
+                                        "${event.object.totalPositiveCases} Postive Cases",
                                         style: TextStyle(
                                             color: Colors.indigo,
                                             fontSize: 16,

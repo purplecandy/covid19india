@@ -1,4 +1,7 @@
+import 'package:covid19india/blocs/country_bloc.dart';
+import 'package:covid19india/models/countrystats_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:covid19india/widgets/charts/chart_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:covid19india/models/entity.dart';
@@ -12,6 +15,26 @@ class ChartType with ChangeNotifier {
   void update(int val) {
     type = val;
     notifyListeners();
+  }
+}
+
+class ChartSwitch extends StatelessWidget {
+  const ChartSwitch({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ChartType>(
+      builder: (c, chartType, _) => SizedBox(
+        // height: MediaQuery.of(context),
+        width: MediaQuery.of(context).size.width * 0.8,
+        child: CupertinoSegmentedControl<int>(
+            children: {0: Text("Cummulative"), 1: Text("Daily")},
+            groupValue: chartType.type,
+            onValueChanged: (v) {
+              chartType.update(v);
+            }),
+      ),
+    );
   }
 }
 
@@ -151,6 +174,142 @@ class ChartCummulative extends StatelessWidget {
                 height: 400,
                 padding: const EdgeInsets.all(8.0),
                 child: ChartWidget<Entity<RegionalStatsModel>>(
+                  backgroundColor: backgroundColor,
+                  barColor: barColor,
+                  tooltipColor: toolTipColor,
+                  chartId: title,
+                  xAxisData: (_, i) => event.object[i].date,
+                  yAxisData: (d, i) {
+                    int yPos;
+                    int diff;
+                    var entity = i == 0 ? event.object[i] : event.object[i - 1];
+
+                    switch (type) {
+                      case "confirmed":
+                        yPos = d.data.totalConfirmed;
+                        diff = entity.data.totalConfirmed;
+                        break;
+                      case "recovered":
+                        yPos = d.data.discharged;
+                        diff = entity.data.discharged;
+                        break;
+                      case "deaths":
+                        yPos = d.data.deaths;
+                        diff = entity.data.deaths;
+                        break;
+                      default:
+                        throw ("Invalid type");
+                    }
+                    return yPos;
+                  },
+                  isCummulative: true,
+                  seriesData: event.object,
+                ),
+              );
+              break;
+            default:
+              return Container();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class CountryChartDaily extends StatelessWidget {
+  final String type, title;
+  final Color backgroundColor, toolTipColor;
+  final charts.Color barColor;
+  const CountryChartDaily(
+      {Key key,
+      this.type,
+      this.title,
+      this.barColor,
+      this.backgroundColor,
+      this.toolTipColor})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CountryStatsBloc>(
+      builder: (c, bloc, w) =>
+          BlocBuilder<CountryState, List<Entity<CountryOverallModel>>>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case CountryState.done:
+              return Container(
+                height: 400,
+                padding: const EdgeInsets.all(8.0),
+                child: ChartWidget<Entity<CountryOverallModel>>(
+                  backgroundColor: backgroundColor,
+                  barColor: barColor,
+                  tooltipColor: toolTipColor,
+                  chartId: title,
+                  xAxisData: (_, i) => event.object[i].date,
+                  yAxisData: (d, i) {
+                    int yPos;
+                    int diff;
+                    var entity = i == 0 ? event.object[i] : event.object[i - 1];
+
+                    switch (type) {
+                      case "confirmed":
+                        yPos = d.data.totalConfirmed;
+                        diff = entity.data.totalConfirmed;
+                        break;
+                      case "recovered":
+                        yPos = d.data.discharged;
+                        diff = entity.data.discharged;
+                        break;
+                      case "deaths":
+                        yPos = d.data.deaths;
+                        diff = entity.data.deaths;
+                        break;
+                      default:
+                        throw ("Invalid type");
+                    }
+                    return i == 0 ? yPos : (yPos - diff).abs();
+                  },
+                  isCummulative: false,
+                  seriesData: event.object,
+                ),
+              );
+              break;
+            default:
+              return Container();
+          }
+        },
+      ),
+    );
+  }
+}
+
+class CountryChartCummulative extends StatelessWidget {
+  final String type, title;
+  final Color backgroundColor, toolTipColor;
+  final charts.Color barColor;
+  const CountryChartCummulative(
+      {Key key,
+      this.type,
+      this.title,
+      this.barColor,
+      this.backgroundColor,
+      this.toolTipColor})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CountryStatsBloc>(
+      builder: (c, bloc, w) =>
+          BlocBuilder<CountryState, List<Entity<CountryOverallModel>>>(
+        bloc: bloc,
+        onSuccess: (context, event) {
+          switch (event.state) {
+            case CountryState.done:
+              return Container(
+                height: 400,
+                padding: const EdgeInsets.all(8.0),
+                child: ChartWidget<Entity<CountryOverallModel>>(
                   backgroundColor: backgroundColor,
                   barColor: barColor,
                   tooltipColor: toolTipColor,

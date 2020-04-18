@@ -31,8 +31,6 @@ class _RegionalPageState extends State<RegionalPage>
   final blocHospital = RegionalHospitalsData();
   final chartType = ChartType();
 
-  int activeIndex = 0;
-
   final deceasedChart = ChartContainer(
     title: "Total Deceased",
     child: ChartSwitcher(
@@ -53,7 +51,7 @@ class _RegionalPageState extends State<RegionalPage>
     ),
   );
 
-  final confirmedChat = ChartContainer(
+  final confirmedChart = ChartContainer(
     title: "Total Confirmed",
     child: ChartSwitcher(
       cummulative: ChartCummulative(
@@ -182,7 +180,7 @@ class _RegionalPageState extends State<RegionalPage>
                                               return Column(
                                                 children: <Widget>[
                                                   ChartSwitch(),
-                                                  confirmedChat,
+                                                  confirmedChart,
                                                   recoveredChart,
                                                   deceasedChart,
                                                 ],
@@ -199,26 +197,6 @@ class _RegionalPageState extends State<RegionalPage>
               ),
             ),
           )),
-    );
-  }
-}
-
-class ChartSwitch extends StatelessWidget {
-  const ChartSwitch({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ChartType>(
-      builder: (c, chartType, _) => SizedBox(
-        // height: MediaQuery.of(context),
-        width: MediaQuery.of(context).size.width * 0.8,
-        child: CupertinoSegmentedControl<int>(
-            children: {0: Text("Cummulative"), 1: Text("Daily")},
-            groupValue: chartType.type,
-            onValueChanged: (v) {
-              chartType.update(v);
-            }),
-      ),
     );
   }
 }

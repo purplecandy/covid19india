@@ -92,7 +92,7 @@ class HospitalData extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Rural ${event.object.ruralH}",
+                                        "${event.object.ruralH} Rural",
                                         style: TextStyle(
                                             color: Colors.indigo,
                                             fontSize: 16,
@@ -111,7 +111,7 @@ class HospitalData extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Urban ${event.object.urbanH}",
+                                        "${event.object.urbanH} Urban",
                                         style: TextStyle(
                                             color: Colors.indigo,
                                             fontSize: 16,
@@ -140,7 +140,7 @@ class HospitalData extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Rural ${event.object.ruralB}",
+                                        "${event.object.ruralB} Rural",
                                         style: TextStyle(
                                             color: Colors.deepOrange,
                                             fontSize: 16,
@@ -159,7 +159,7 @@ class HospitalData extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(6)),
                                     child: Center(
                                       child: Text(
-                                        "Urban ${event.object.urbanB}",
+                                        "${event.object.urbanB} Urban",
                                         style: TextStyle(
                                             color: Colors.deepOrange,
                                             fontSize: 16,

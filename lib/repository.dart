@@ -10,6 +10,7 @@ class Repository extends ChangeNotifier {
   Map<String, dynamic> casesCountHistory;
   Map<String, dynamic> districtData;
   Map<String, dynamic> hospitalBeds;
+  Map<String, dynamic> testingDataLatest;
 
   Repository() {
     initiazlie();
@@ -51,6 +52,15 @@ class Repository extends ChangeNotifier {
       }
       notifyListeners();
     });
+
+    getTestingData().then((data) {
+      if (data.state == Status.success) {
+        testingDataLatest = data.object;
+      } else {
+        testingDataLatest = {};
+      }
+      notifyListeners();
+    });
   }
 
   static Future<AsyncResponse> getCaseStatsLatest() async =>
@@ -64,6 +74,9 @@ class Repository extends ChangeNotifier {
 
   static Future<AsyncResponse> getHospitalData() async =>
       await _makeRequest(Urls.root + Urls.hospitalBeds);
+
+  static Future<AsyncResponse> getTestingData() async =>
+      await _makeRequest(Urls.root + Urls.testingStatsLatest);
 
   static Future<AsyncResponse> _makeRequest(String url) async {
     try {
