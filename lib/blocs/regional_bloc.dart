@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:covid19india/async.dart';
 import 'package:covid19india/bloc_base.dart';
 import 'package:covid19india/models/district.dart';

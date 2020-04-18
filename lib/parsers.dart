@@ -85,3 +85,36 @@ Future<AsyncResponse> filterHospitalsByRegion(
     return AsyncResponse(Status.exception, e);
   }
 }
+
+Future<AsyncResponse> filterCountryStatsLatest(
+    Map<String, dynamic> jsonData) async {
+  try {
+    if (jsonData.isNotEmpty) {
+      return AsyncResponse(Status.success, jsonData["data"]["summary"]);
+    } else {
+      throw Exception("Request wasn't successfull");
+    }
+  } catch (e) {
+    return AsyncResponse(Status.exception, e);
+  }
+}
+
+Future<AsyncResponse> filterCountryStatsHistory(
+    Map<String, dynamic> jsonData) async {
+  try {
+    if (jsonData["success"] == true) {
+      List<Map<String, dynamic>> listOfStats = [];
+
+      for (var item in jsonData["data"]) {
+        listOfStats.add({"day": item["day"], "summary": item["summary"]});
+      }
+      return listOfStats.length > 0
+          ? AsyncResponse(Status.success, listOfStats)
+          : AsyncResponse(Status.error, "Couldn't find any record");
+    } else {
+      throw Exception("Request wasn't successfull");
+    }
+  } catch (e) {
+    return AsyncResponse(Status.exception, e);
+  }
+}

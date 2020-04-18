@@ -1,4 +1,5 @@
 import 'package:covid19india/app.dart';
+import 'package:covid19india/pages/country.dart';
 import 'package:covid19india/pages/regional.dart';
 import 'package:covid19india/preferences.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,9 @@ class _HomePageState extends State<HomePage> {
     RegionalPage(
       key: UniqueKey(),
     ),
-    Container()
+    CountryPage(
+      key: UniqueKey(),
+    )
   ];
 
   @override
