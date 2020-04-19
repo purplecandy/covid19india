@@ -1,16 +1,16 @@
 # covid19india
 
-A new Flutter project.
+A Flutter project for easily mointoring the COVID-19 India stats.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project currently relies on this unoffical repository for fetching all the official data [COVID-19 REST API for India](https://github.com/amodm/api-covid19-in).
 
-A few resources to get you started if this is your first Flutter project:
+I will do a migration to a Firebase project for better reliability in case the project gets dumped.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+Feel free to test and contribute to the project:
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The project is still in early stages of development, please anything is subject to change.
+
+## HELP FOR IOS BUILDS
+If you have a Apple System you can help me build and deploy this app for iPhones
